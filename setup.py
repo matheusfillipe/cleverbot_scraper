@@ -17,14 +17,14 @@ def requirements():
 requirements = requirements()
 
 setuptools.setup(
-    name="cleverbot-scrapper",
-    version="0.1.6",
+    name="cleverbot-scraper",
+    version="0.1",
     author="Matheus Fillipe",
     author_email="mattf@tilde.club",
     description="Free cleverbot without headless browser",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/matheusfillipe/cleverbot_scrapper",
+    url="https://github.com/matheusfillipe/cleverbot_scraper",
     packages=setuptools.find_packages(),
     install_requires=requirements,
     classifiers=[
