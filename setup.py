@@ -24,7 +24,7 @@ setuptools.setup(
     description="Free cleverbot without headless browser",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/matheusfillipe/cleverbot-scrapper",
+    url="https://github.com/matheusfillipe/cleverbot_scrapper",
     packages=setuptools.find_packages(),
     install_requires=requirements,
     classifiers=[
