@@ -1,3 +1,3 @@
-from .cleverbot import cleverbot
+from .cleverbot import Cleverbot
 
 __all__ = ("cleverbot",)
