@@ -5,59 +5,49 @@ from typing import List
 
 import requests
 
+from .constants import CLEVERBOT_URL, CLEVERBOT_API_URL
+
 cookies = None
 sessions = dict()
 
+class Cleverbot:
+    def __init__(self, context: List[str] = []):
+        self.cookies = None
+        self.context = context
 
-def cleverbot(stimulus: str, context: List[str] = [], session: str = None) -> str:
-    """Establishs communication with cleverbot and returns the decoded response
-    string.
+        self.get_cookies()
 
-    :param stimulus: Message to add to this cleverbot session and get a direct answer for.
-    :type stimulus: str
-    :param context: List of messages to preload on the bot.
-    :type context: List[str]
-    :param session: Session name to differenciate from other conversations. Each session is a separate conversation.
-    :type session: str
-    :rtype: str
-    """
+    def get_cookies(self):
+        if self.cookies is None:
+            response = requests.get(CLEVERBOT_URL)
+            self.cookies = {"XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()}
+        
+    def post_message(self, message: str) -> str:
+        payload = f"stimulus={requests.utils.requote_uri(message)}&"
+        print("[DEBUG] Message: ", message)
+        _context = self.context[:]
+        reverse_context = list(reversed(_context))
 
-    global cookies, sessions
-    if cookies is None:
-        req = requests.get("https://www.cleverbot.com/")
-        cookies = {"XVIS": re.search(r"\w+(?=;)", req.headers["Set-cookie"]).group()}
-    payload = f"stimulus={requests.utils.requote_uri(stimulus)}&"
+        for i in range(len(_context)):
+            payload += f"vText{i + 2}={requests.utils.requote_uri(reverse_context[i])}&"
 
-    _context = context[:]
-    reverse_context = list(reversed(_context))
+        self.context.append(message)
+        
+        payload += "cb_settings_scripting=no&islearning=1&icognoid=wsf&icognocheck="
+        
+        payload += hashlib.md5(payload[7:33].encode()).hexdigest()
 
-    for i in range(len(_context)):
-        payload += f"vText{i + 2}={requests.utils.requote_uri(reverse_context[i])}&"
+        print("[DEBUG] Payload: ", payload)
+        response = requests.post(
+            CLEVERBOT_API_URL,
+            cookies=cookies,
+            data=payload,
+        )
 
-    if session:
-        # Creates new session if not exist
-        if session not in sessions.keys():
-            sessions[session] = list()
+        print("[DEBUG] Response: ", response.content)
+        print("[DEBUG] Context: ", self.context)
+        response = re.split(r"\\r", str(response.content))[0]
+        response = response[2:-1]
 
-        _session = list(reversed(sessions[session]))
-        # Adding the session to the payload
-        for i in range(len(sessions[session])):
-            payload += f"vText{i + len(_context) + 2}={requests.utils.requote_uri(_session[i])}&"
-
-        # Adds the context to the session
-        sessions[session] = _context + sessions[session]
-
-    payload += "cb_settings_scripting=no&islearning=1&icognoid=wsf&icognocheck="
-
-    payload += hashlib.md5(payload[7:33].encode()).hexdigest()
-
-    req = requests.post(
-        "https://www.cleverbot.com/webservicemin?uc=UseOfficialCleverbotAPI",
-        cookies=cookies,
-        data=payload,
-    )
-    getresponse = re.split(r"\\r", str(req.content))[0]
-    response = getresponse[2:-1]
-    if session:
-        sessions[session].extend([stimulus, response])
-    return codecs.escape_decode(bytes(response, "utf-8"))[0].decode("utf-8")
+        self.context.append(response)
+        return response
