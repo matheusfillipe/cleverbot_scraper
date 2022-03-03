@@ -1,12 +1,17 @@
 from .cleverbot import Cleverbot
 
-c = Cleverbot()
+alice = Cleverbot()
+bob = Cleverbot()
+
+message = "Hello there, bitch"
 
 if __name__ == "__main__":
     print("Start the conversation, press Ctrl-c to stop \n")
     try:
         while True:
-            user_input = input(">> ")
-            print("Bot: ", c.post_message(user_input))
+            message = alice.post_message(message)
+            print("Alice: ", message)
+            message = bob.post_message(message)
+            print("Bob: ", message)
     except KeyboardInterrupt:
         print("Exiting.")
