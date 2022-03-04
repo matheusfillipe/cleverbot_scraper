@@ -1,9 +1,8 @@
 # Cleverbot Scraper
 
-Simple free cleverbot library that doesn't require running a heavy ram wasting headless web browser to actually chat with the bot, all that it uses is the requests module. Also supports simultaneously different sessions, which means, different parallel conversations.
+Simple free cleverbot library that doesn't require running a heavy ram wasting headless web browser to actually chat with the bot, only relying on the requests module. The api is wrapped by the `Cleverbot` class and you can use the `send` module to receive responses from cleverbot.
 
 ## Try it
-
 
 Install and test with:
 ```bash
@@ -13,14 +12,35 @@ python3 -m "cleverbot"
 The last command will start a live session with the cleverbot(for testing purposes).
 
 
-## Example
-```python
-from cleverbot import cleverbot
-# With context and session
-# An ongoing conversation with the first question as "How are you?"
-print("How are you?")
-print(cleverbot(input(">>"), ["hi.", "How are you?"], "How are you?"))
-while True:
-    print(cleverbot(input(">>"), session="How are you?"))
+## Examples
 
+### Chat with the bot
+
+```python
+from cleverbot import Cleverbot
+bot = Cleverbot()
+print("Start the conversation, press Ctrl-c to stop \n")
+try:
+    while True:
+        print(bot.send(input(">> ")))
+except KeyboardInterrupt:
+    print("Exiting.")
+```
+
+### Make the bot chat with itself
+
+```python
+from cleverbot import Cleverbot
+alice = Cleverbot()
+bob = Cleverbot()
+message = "Hi there! How are you doing?"
+print("Press Ctrl-c to stop \n")
+try:
+    while True:
+        print("Bob: ", message)
+        message = alice.send(message)
+        print("Alice: ", message)
+        message = bob.send(message)
+except KeyboardInterrupt:
+    print("Exiting.")
 ```
