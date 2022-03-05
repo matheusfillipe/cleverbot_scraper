@@ -3,7 +3,7 @@ import hashlib
 import logging
 import re
 import time
-from typing import List
+from typing import List, Union
 
 import requests
 
@@ -21,7 +21,7 @@ class Cleverbot:
         Cookies to be used in the requests.
     context : list
         List of messages representing the context of the conversation.
-    proxies : list or str
+    proxies :
         Proxy to be used or proxies to rotate through.
     debounce: bool
         Whether to try to debounce the requests or not. If set to False it will try to use proxies immediately upon failure.
@@ -35,14 +35,14 @@ class Cleverbot:
     def __init__(
         self,
         context: List[str] = [],
-        proxies: dict = None,
+        proxies: Union[dict, List[dict], List[str]] = None,
         debounce: bool = True,
     ):
         """
         Cleverbot Constructor
 
         :param context List[str]:List of strings to be used as the initial chat messages with the bot.
-        :param proxies dict: dict with keys "http" and "https" and values of the proxies to be used. The values can be a list of proxies.
+        :param proxies dict: Must have keys "http" and "https" and values of the proxies address:port to be used on the requests library format. You can also pass a list of proxies to rotate through. If an element of the list is None, it means not to use any proxy.
         :param debounce bool: Whether to try to debounce the requests or not. If set to False it will try to use proxies immediately upon failure.
         """
         self.cookies = None
@@ -53,28 +53,36 @@ class Cleverbot:
         if proxies is None:
             self.proxies = [None]
         elif isinstance(proxies, dict):
-            self.proxies = (
-                [None]
-                + [{"http": v} for v in proxies.get("http", [])]
-                + [{"https": v} for v in proxies.get("https", [])]
-            )
+            self.proxies = [proxies]
+        elif isinstance(proxies, list):
+            self.proxies = []
+            for proxy in proxies:
+                if isinstance(proxy, dict):
+                    self.proxies.append(proxy)
+                elif isinstance(proxy, str):
+                    self.proxies.append({"http": proxy, "https": proxy})
+                else:
+                    raise ValueError(
+                        "Invalid proxy format. Must be a dict, a list of dicts or a list of strings."
+                    )
         else:
-            raise TypeError("Proxies must be a dict.")
+            raise ValueError(
+                "Invalid proxy format. Must be a dict, a list of dicts or a list of strings."
+            )
 
         self._proxy_index = 0
         self._debounce_attempts = 0
         self._proxy = self.proxies[0]
         self._attempts = 0
 
-        self._get_cookies()
+        self._refresh_cookies()
 
-    def _get_cookies(self):
-        """_get_cookies."""
-        if self.cookies is None:
-            response = requests.get(CLEVERBOT_URL, proxies=self._proxy)
-            self.cookies = {
-                "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
-            }
+    def _refresh_cookies(self):
+        """Refresh the cookies"""
+        response = requests.get(CLEVERBOT_URL, proxies=self._proxy)
+        self.cookies = {
+            "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
+        }
 
     def send(self, message: str) -> str:
         """
@@ -117,7 +125,7 @@ class Cleverbot:
                 # TODO: Raise exception? Return None? idk
                 return ""
 
-            self._get_cookies()
+            self._refresh_cookies()
             if self._debounce_attempts >= MAX_DEBOUNCE_ATTEMPS or not self.debounce:
                 self._debounce_attempts = 0
                 self._proxy_index += 1
