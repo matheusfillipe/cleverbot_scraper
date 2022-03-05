@@ -7,10 +7,14 @@ Simple free cleverbot library that doesn't require running a heavy ram wasting h
 Install and test with:
 ```bash
 pip3 install cleverbot-scraper
-python3 -m "cleverbot"
+python3 -m cleverbot
 ```
-The last command will start a live session with the cleverbot(for testing purposes).
+The last command will start a live session with the cleverbot.
 
+You can also make cleverbot chat with itself with:
+```bash
+python3 -m cleverbot auto
+```
 
 ## Examples
 
