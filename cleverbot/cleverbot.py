@@ -61,9 +61,11 @@ class Cleverbot:
                     self.proxies.append(proxy)
                 elif isinstance(proxy, str):
                     self.proxies.append({"http": proxy, "https": proxy})
+                elif proxy is None:
+                    self.proxies.append(None)
                 else:
                     raise ValueError(
-                        "Invalid proxy format. Must be a dict, a list of dicts or a list of strings."
+                        "Invalid proxy format. Must be a dict or a list of dicts."
                     )
         else:
             raise ValueError(
