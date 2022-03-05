@@ -18,7 +18,7 @@ def chat():
 
 def self_chat():
     """
-    This function is used to chat with the bot.
+    This function makes cleverbot chat with itself.
     """
     alice = Cleverbot()
     bob = Cleverbot()
