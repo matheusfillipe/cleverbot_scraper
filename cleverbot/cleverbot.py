@@ -149,8 +149,7 @@ class Cleverbot:
             self._attempts += 1
             return self.send(message)
 
-        response = re.split(r"\\r", str(response.content))[0]
-        response = response[2:-1]
+        response = re.split(r"\r", response.content.decode("utf-8"))[0]
         self._attempts = 0
 
         # Append bot's response to the context
