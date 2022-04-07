@@ -39,6 +39,7 @@ class Cleverbot:
         context: List[str] = [],
         proxies: Union[dict, List[dict], List[str]] = None,
         debounce: bool = True,
+        use_tor_fallback: bool = False,
     ):
         """
         Cleverbot Constructor
@@ -46,11 +47,16 @@ class Cleverbot:
         :param context List[str]:List of strings to be used as the initial chat messages with the bot.
         :param proxies dict: Must have keys "http" and "https" and values of the proxies address:port to be used on the requests library format. You can also pass a list of proxies to rotate through. If an element of the list is None, it means not to use any proxy.
         :param debounce bool: Whether to try to debounce the requests or not. If set to False it will try to use proxies immediately upon failure.
+        :param use_tor_fallback: If set to True, whenever a request fail will try to use a new tor session as a proxy. This will override the proxy options. Even when this is set to true it will still try to make a connection without using tor at first.
         """
         self.cookies = None
         self.context = context
         self.proxies = proxies
         self.debounce = debounce
+        self.tor = use_tor_fallback
+
+        if not isinstance(self.tor, bool):
+            raise ValueError("use_tor_fallback must be a boolean")
 
         if proxies is None:
             self.proxies = [None]
@@ -78,13 +84,16 @@ class Cleverbot:
         self._debounce_attempts = 0
         self._proxy = self.proxies[0]
         self._attempts = 0
+        self.session = None
+        self._start_session()
 
-        self._refresh_cookies()
+    def _start_session(self):
+        """Starts a new session refreshing the cookies"""
+        self.session = requests.Session()
+        self.session.proxies = self._proxy
 
-    def _refresh_cookies(self):
-        """Refresh the cookies"""
         date = datetime.now().strftime("%Y%m%d")
-        response = requests.get(CLEVERBOT_COOKIE_URL + date, proxies=self._proxy)
+        response = self.session.get(CLEVERBOT_COOKIE_URL + date, )
         self.cookies = {
             "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
         }
@@ -113,11 +122,10 @@ class Cleverbot:
         # Checksum
         payload += hashlib.md5(payload[7:33].encode()).hexdigest()
 
-        response = requests.post(
+        response = self.session.post(
             CLEVERBOT_API_URL,
             cookies=self.cookies,
             data=payload,
-            proxies=self._proxy,
         )
 
         # If the request is not succesful, refresh cookies, debounce, try a new proxy
@@ -130,7 +138,7 @@ class Cleverbot:
                 # TODO: Raise exception? Return None? idk
                 return ""
 
-            self._refresh_cookies()
+            self._start_session()
             if self._debounce_attempts >= MAX_DEBOUNCE_ATTEMPS or not self.debounce:
                 self._debounce_attempts = 0
                 self._proxy_index += 1

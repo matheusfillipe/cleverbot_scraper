@@ -48,3 +48,27 @@ try:
 except KeyboardInterrupt:
     print("Exiting.")
 ```
+### Use proxies
+
+If cleverbot.com is returning 403 errors for you you might want to use a proxy:
+```python
+
+from cleverbot import Cleverbot
+bot = Cleverbot(proxies={'http': 'http://x.x.x.x:yyyy', 'https': 'http://x.x.x.x:yyyy'})
+while True: print(bot.send(input(">> ")))
+```
+
+### Use tor as a fallback
+
+Requires [torpy](https://github.com/torpyorg/torpy) with requests extra:
+
+`pip3 install torpy[requests]`
+
+```python
+
+from cleverbot import Cleverbot
+bot = Cleverbot(use_tor_fallback = True)
+while True: print(bot.send(input(">> ")))
+```
+
+
