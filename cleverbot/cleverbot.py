@@ -53,9 +53,9 @@ class Cleverbot:
         self.context = context
         self.proxies = proxies
         self.debounce = debounce
-        self.tor = use_tor_fallback
+        self.use_tor = use_tor_fallback
 
-        if not isinstance(self.tor, bool):
+        if not isinstance(self.use_tor, bool):
             raise ValueError("use_tor_fallback must be a boolean")
 
         if proxies is None:
@@ -85,23 +85,32 @@ class Cleverbot:
         self._proxy = self.proxies[0]
         self._attempts = 0
         self.session = None
+        self._tor_context = None
         self._start_session()
 
     def _start_session(self, tor=False):
         """Starts a new session refreshing the cookies"""
+        logging.debug("Starting new session")
         if tor:
             try:
                 from torpy.http.requests import tor_requests_session
             except ModuleNotFoundError:
                 raise ModuleNotFoundError("You have to install torpy to use the tor fallback. Run: pip3 install torpy[requests]")
-            self.session = tor_requests_session()
+            logging.info("Starting tor session")
+            if self._tor_context:
+                self._tor_context.__exit__()
+            self._tor_context = tor_requests_session()
+            self.session = self._tor_context.__enter__()
+            logging.info("tor session created!")
         else:
             self.session = requests.Session()
-        self.session.proxies = self._proxy
+            self.session.proxies = self._proxy
 
         date = datetime.now().strftime("%Y%m%d")
         response = self.session.get(CLEVERBOT_COOKIE_URL + date)
         if "Set-cookie" not in response.headers:
+            if not tor and self.use_tor:
+                return self._start_session(self.use_tor)
             raise requests.exceptions.HTTPError(f"Api returned '{response.status_code}' for request. Try to use a proxy or use_tor_fallback")
         self.cookies = {
             "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
@@ -147,7 +156,7 @@ class Cleverbot:
                 # TODO: Raise exception? Return None? idk
                 return ""
 
-            self._start_session()
+            self._start_session(self.use_tor)
             if self._debounce_attempts >= MAX_DEBOUNCE_ATTEMPS or not self.debounce:
                 self._debounce_attempts = 0
                 self._proxy_index += 1

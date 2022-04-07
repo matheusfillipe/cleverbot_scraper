@@ -57,6 +57,21 @@ from cleverbot import Cleverbot
 bot = Cleverbot(proxies={'http': 'http://x.x.x.x:yyyy', 'https': 'http://x.x.x.x:yyyy'})
 while True: print(bot.send(input(">> ")))
 ```
+You can also simply pass a list of `ip:port`:
+
+```python
+from cleverbot import Cleverbot
+PROXIES = [
+    None,
+    "x.x.x.x:yyyy",
+    "x.x.x.x:yyyy",
+    "x.x.x.x:yyyy",
+    "x.x.x.x:yyyy",
+    "x.x.x.x:yyyy",
+]
+bot = Cleverbot(proxies=PROXIES)
+while True: print(bot.send(input(">> ")))
+```
 
 ### Use tor as a fallback
 
