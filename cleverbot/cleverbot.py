@@ -3,12 +3,14 @@ import hashlib
 import logging
 import re
 import time
+from datetime import datetime
 from typing import List, Union
 
 import requests
 
-from .constants import (CLEVERBOT_API_URL, CLEVERBOT_URL, DEBOUNCE_TIME,
-                        MAX_ATTEPTS, MAX_CONTEXT_LENGTH, MAX_DEBOUNCE_ATTEMPS)
+from .constants import (CLEVERBOT_API_URL, CLEVERBOT_COOKIE_URL, CLEVERBOT_URL,
+                        DEBOUNCE_TIME, MAX_ATTEPTS, MAX_CONTEXT_LENGTH,
+                        MAX_DEBOUNCE_ATTEMPS)
 
 
 class Cleverbot:
@@ -81,7 +83,8 @@ class Cleverbot:
 
     def _refresh_cookies(self):
         """Refresh the cookies"""
-        response = requests.get(CLEVERBOT_URL, proxies=self._proxy)
+        date = datetime.now().strftime("%Y%m%d")
+        response = requests.get(CLEVERBOT_COOKIE_URL + date, proxies=self._proxy)
         self.cookies = {
             "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
         }
