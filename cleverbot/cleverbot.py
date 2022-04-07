@@ -27,7 +27,8 @@ class Cleverbot:
         Proxy to be used or proxies to rotate through.
     debounce: bool
         Whether to try to debounce the requests or not. If set to False it will try to use proxies immediately upon failure.
-
+    :param use_tor_fallback:
+        If set to True, whenever a request fail will try to use a new tor session as a proxy. This will override the proxy options. Even when this is set to true it will still try to make a connection without using tor at first.
     Methods
     ----------
     send(message)

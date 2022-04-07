@@ -18,7 +18,7 @@ requirements = requirements()
 
 setuptools.setup(
     name="cleverbot-scraper",
-    version="0.2.6",
+    version="0.2.7",
     author="Matheus Fillipe",
     author_email="mattf@tilde.club",
     description="Free cleverbot without headless browser",
