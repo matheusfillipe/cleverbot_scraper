@@ -87,13 +87,22 @@ class Cleverbot:
         self.session = None
         self._start_session()
 
-    def _start_session(self):
+    def _start_session(self, tor=False):
         """Starts a new session refreshing the cookies"""
-        self.session = requests.Session()
+        if tor:
+            try:
+                from torpy.http.requests import tor_requests_session
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError("You have to install torpy to use the tor fallback. Run: pip3 install torpy[requests]")
+            self.session = tor_requests_session()
+        else:
+            self.session = requests.Session()
         self.session.proxies = self._proxy
 
         date = datetime.now().strftime("%Y%m%d")
-        response = self.session.get(CLEVERBOT_COOKIE_URL + date, )
+        response = self.session.get(CLEVERBOT_COOKIE_URL + date)
+        if "Set-cookie" not in response.headers:
+            raise requests.exceptions.HTTPError(f"Api returned '{response.status_code}' for request. Try to use a proxy or use_tor_fallback")
         self.cookies = {
             "XVIS": re.search(r"\w+(?=;)", response.headers["Set-cookie"]).group()
         }
